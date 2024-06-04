@@ -1,0 +1,226 @@
+CREATE TABLE Endereco_Profissional (
+    ID_Endereco INT PRIMARY KEY,
+    Rua VARCHAR(255),
+    CEP VARCHAR(20),
+    Bairro VARCHAR(100),
+    Cidade VARCHAR(100),
+    Estado VARCHAR(50)
+);
+
+CREATE TABLE Profissional (
+    ID_profisssional INT PRIMARY KEY,
+    CPF VARCHAR(20) UNIQUE,
+    Nome VARCHAR(255),
+    Tipo_Profissional VARCHAR(50),
+    ID_Endereco INT,
+    FOREIGN KEY (ID_Endereco) REFERENCES Endereco_Profissional(ID_Endereco)
+);
+
+
+CREATE TABLE Telefone (
+    ID_Telefone INT PRIMARY KEY,
+    ID_Profissional INT,
+    CPF VARCHAR(20),
+    NumeroCelular VARCHAR(20),
+    NumeroFixo VARCHAR(20),
+    NumeroContato VARCHAR(20),
+    FOREIGN KEY (ID_Profissional) REFERENCES Profissional(ID_profisssional),
+    FOREIGN KEY (CPF) REFERENCES Profissional(CPF)
+);
+
+CREATE TABLE Medico (
+    ID_profisssional INT PRIMARY KEY,
+    CRM VARCHAR(20),
+    CPF VARCHAR(20) UNIQUE,
+    Especialidade VARCHAR(50),
+    Dias_Platao VARCHAR(50),
+    FOREIGN KEY (ID_profisssional) REFERENCES Profissional(ID_profisssional)
+);
+
+CREATE TABLE Enfermeiro (
+    ID_profisssional INT PRIMARY KEY,
+    COREM VARCHAR(20),
+    CPF VARCHAR(20) UNIQUE,
+    Dias_Platao VARCHAR(50),
+    FOREIGN KEY (ID_profisssional) REFERENCES Profissional(ID_profisssional)
+);
+
+CREATE TABLE Endereco_Hospital (
+    ID_Endereco INT PRIMARY KEY,
+    Rua VARCHAR(255),
+    CEP VARCHAR(20),
+    Bairro VARCHAR(100),
+    Cidade VARCHAR(100),
+    Estado VARCHAR(50)
+);
+
+CREATE TABLE Hospital (
+    CNPJ VARCHAR(20) PRIMARY KEY,
+    Nome VARCHAR(255),
+    Macro_Regiao VARCHAR(100),
+    ID_Endereco INT,
+    FOREIGN KEY (ID_Endereco) REFERENCES Endereco_Hospital(ID_Endereco)
+);
+
+CREATE TABLE Endereco_Paciente (
+    ID_Endereco INT PRIMARY KEY,
+    Rua VARCHAR(255),
+    CEP VARCHAR(20),
+    Bairro VARCHAR(100),
+    Cidade VARCHAR(100),
+    Estado VARCHAR(50)
+);
+
+CREATE TABLE Leito (
+    ID_Leito INT PRIMARY KEY,
+    Numero VARCHAR(20),
+    Tipo VARCHAR(50),
+    CNPJ_Hospital VARCHAR(20),
+    FOREIGN KEY (CNPJ_Hospital) REFERENCES Hospital(CNPJ)
+);
+
+
+
+CREATE TABLE Paciente (
+    CPF VARCHAR(20) PRIMARY KEY,
+    Nome VARCHAR(255),
+    RG VARCHAR(20),
+    Afiliacao_Mae VARCHAR(255),
+    Afiliacao_Pai VARCHAR(255),
+    CNPJ_Hospital VARCHAR(20) NOT NULL,
+    ID_Endereco INT NOT NULL,
+    ID_Leito INT NOT NULL,
+    FOREIGN KEY (CNPJ_Hospital) REFERENCES Hospital(CNPJ),
+    FOREIGN KEY (ID_Endereco) REFERENCES Endereco_Paciente(ID_Endereco),
+    FOREIGN KEY (ID_Leito) REFERENCES Leito(ID_Leito)
+);
+
+
+
+CREATE TABLE Monitoramento (
+    ID_Monitoramento INT PRIMARY KEY,
+    Oxigenacao VARCHAR(20),
+    Observacoes TEXT,
+    Situacao VARCHAR(50),
+    Consciencia VARCHAR(50),
+    Nivel_de_Dor VARCHAR(20),
+    Grau_Febre VARCHAR(20),
+    Medicamentos TEXT,
+    ID_profisssional INT NOT NULL,
+    CPF_Paciente VARCHAR(20) NOT NULL,
+    FOREIGN KEY (ID_profisssional) REFERENCES Profissional(ID_profisssional),
+    FOREIGN KEY (CPF_Paciente) REFERENCES Paciente(CPF)
+);
+
+CREATE TABLE Tratamento (
+    ID_Tratamento INT PRIMARY KEY,
+    Descricao TEXT
+);
+
+
+CREATE TABLE Medico_Prescreve_Tratamento (
+    ID_profisssional INT,
+    ID_Tratamento INT,
+    Data_Inicio DATE,
+    Data_Fim DATE,
+    FOREIGN KEY (ID_profisssional) REFERENCES Medico(ID_profisssional),
+    FOREIGN KEY (ID_Tratamento) REFERENCES Tratamento(ID_Tratamento),
+    PRIMARY KEY (ID_profisssional, ID_Tratamento)
+);
+
+
+
+
+CREATE TABLE Paciente_Recebe_Tratamento (
+    CPF_Paciente VARCHAR(20),
+    ID_Tratamento INT,
+    FOREIGN KEY (CPF_Paciente) REFERENCES Paciente(CPF),
+    FOREIGN KEY (ID_Tratamento) REFERENCES Tratamento(ID_Tratamento),
+    PRIMARY KEY (CPF_Paciente, ID_Tratamento)
+);
+
+CREATE TABLE Exame (
+    ID_exame INT PRIMARY KEY,
+    nome_exame VARCHAR(100),
+    tipo VARCHAR(50),
+    classificacao VARCHAR(50)
+);
+
+CREATE TABLE Medico_Prescreve_Exame (
+    ID_profisssional INT,
+    ID_Exame INT,
+    data DATE,
+    FOREIGN KEY (ID_profisssional) REFERENCES Medico(ID_profisssional),
+    FOREIGN KEY (ID_Exame) REFERENCES Exame(ID_exame),
+    PRIMARY KEY (ID_profisssional, ID_Exame)
+);
+
+CREATE TABLE Paciente_Realiza_Exame (
+    CPF_Paciente VARCHAR(20),
+    ID_Exame INT,
+    data DATE,
+    FOREIGN KEY (CPF_Paciente) REFERENCES Paciente(CPF),
+    FOREIGN KEY (ID_Exame) REFERENCES Exame(ID_exame),
+    PRIMARY KEY (CPF_Paciente, ID_Exame)
+);
+
+
+CREATE TABLE Hospital_Trabalha_Profissional (
+    ID_Hospital VARCHAR(20),
+    ID_Profissional INT,
+    FOREIGN KEY (ID_Hospital) REFERENCES Hospital(CNPJ),
+    FOREIGN KEY (ID_Profissional) REFERENCES Profissional(ID_profisssional),
+    PRIMARY KEY (ID_Hospital, ID_Profissional)
+);
+
+CREATE TABLE Acompanhante (
+    ID_Acompanhante INT PRIMARY KEY,
+    Nome VARCHAR(255),
+    Telefone VARCHAR(20),
+    CPF_Paciente VARCHAR(20) NOT NULL,
+    FOREIGN KEY (CPF_Paciente) REFERENCES Paciente(CPF)
+);
+
+CREATE TABLE Medicacao (
+    ID_Medicacao INT PRIMARY KEY,
+    Nome VARCHAR(100),
+    Frequencia VARCHAR(50),
+    Dosagem VARCHAR(50),
+    CPF_Paciente VARCHAR(20) NOT NULL,
+    ID_profisssional INT NOT NULL,
+    FOREIGN KEY (CPF_Paciente) REFERENCES Paciente(CPF),
+    FOREIGN KEY (ID_profisssional) REFERENCES Profissional(ID_profisssional)
+);
+
+CREATE TABLE Alergia (
+    ID_alergia INT PRIMARY KEY,
+    descricao_alergia TEXT,
+    CPF_Paciente VARCHAR(20) NOT NULL,
+    ID_profisssional INT NOT NULL,
+    FOREIGN KEY (CPF_Paciente) REFERENCES Paciente(CPF),
+    FOREIGN KEY (ID_profisssional) REFERENCES Profissional(ID_profisssional)
+);
+
+CREATE TABLE Sinais_Clinicos (
+    ID_Sinais_Clinicos INT PRIMARY KEY,
+    Febre VARCHAR(20),
+    Estado VARCHAR(50),
+    Nivel_Oxigenacao VARCHAR(20),
+    Respiracao VARCHAR(20),
+    Nivel_de_Dor VARCHAR(20),
+    Batimentos VARCHAR(20),
+    Nivel_de_Consciencia VARCHAR(20),
+    ID_profisssional INT NOT NULL,
+    CPF_paciente VARCHAR(20) NOT NULL,
+    FOREIGN KEY (ID_profisssional) REFERENCES Profissional(ID_profisssional),
+    FOREIGN KEY (CPF_paciente) REFERENCES Paciente(CPF)
+);
+
+CREATE TABLE Sintoma (
+    ID_sintomas INT PRIMARY KEY,
+    Descricao TEXT,
+    CPF_Paciente VARCHAR(20) NOT NULL,
+    ID_profisssional INT NOT NULL,
+    FOREIGN KEY (CPF_Paciente) REFERENCES Paciente(CPF),
+    FOREIGN KEY (ID_profisssional) REFERENCES Profissional(ID_profisssional)
+);
