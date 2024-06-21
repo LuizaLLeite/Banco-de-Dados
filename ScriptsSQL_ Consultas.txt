@@ -1,0 +1,153 @@
+--QUESTÃO A
+SELECT h.Nome
+FROM Hospital h
+JOIN Paciente p 
+  ON h.CNPJ = p.CNPJ_Hospital
+JOIN Paciente_Recebe_Tratamento prt 
+  ON p.CPF = prt.CPF_Paciente
+JOIN Tratamento t 
+  ON prt.ID_Tratamento = t.ID_Tratamento
+JOIN Medico_Prescreve_Tratamento mpt 
+  ON t.ID_Tratamento = mpt.ID_Tratamento
+WHERE t.Descricao LIKE '%Covid-19%'
+  AND mpt.Data_Inicio BETWEEN '2020-03-01' AND '2020-10-22';
+  
+  
+  
+-- QUESTÃO B
+SELECT Pa.Nome AS Nome_Paciente, S.Descricao AS Sintoma
+FROM Paciente Pa
+JOIN Sintoma S 
+ON Pa.CPF = S.CPF_Paciente
+JOIN Profissional Pr 
+ON S.ID_profisssional = Pr.ID_profisssional
+WHERE Pr.Nome = 'Dr. Carlos Lima';
+
+
+  
+--QUESTÃO C
+SELECT e.ID_exame, e.nome_exame
+FROM Profissional prof
+JOIN Medico_Prescreve_Exame mpe 
+ON prof.ID_profisssional = mpe.ID_profisssional
+JOIN Exame e 
+ON mpe.ID_Exame = e.ID_exame
+WHERE prof.Nome = 'Dr. João Silva'
+  AND mpe.Data BETWEEN '2020-06-01' AND '2020-09-30';
+  
+  
+  
+
+--QUESTÃO D
+CREATE OR REPLACE FUNCTION ListarHospitaisQuantidadePacientes()
+RETURNS TABLE (nome_hospital TEXT, quantidade_pacientes INT) AS
+$$
+BEGIN
+    RETURN QUERY
+    SELECT h.nome AS nome_hospital, COUNT(p.cpf) AS quantidade_pacientes
+    FROM Hospital h
+    JOIN Leito l ON h.cnpj = l.cnpj_hospital
+    JOIN Paciente p ON l.id_leito = p.id_leito
+    WHERE p.data_internacao BETWEEN '2020-05-01' AND '2020-07-31'
+    GROUP BY h.nome
+    ORDER BY quantidade_pacientes;
+END;
+$$
+LANGUAGE plpgsql;
+
+
+SELECT * FROM ListarHospitaisQuantidadePacientes();
+
+
+
+--QUESTÃO E
+SELECT
+    h.Nome AS Nome_Hospital,
+    COALESCE(ROUND(avg(e.num_enfermeiros), 0), 0) AS Media_Enfermeiros,
+    COALESCE(ROUND(avg(m.num_medicos), 0), 0) AS Media_Medicos
+FROM Hospital h
+LEFT JOIN (
+    SELECT
+        htp.ID_Hospital,
+        COUNT(*) AS num_enfermeiros
+    FROM Hospital_Trabalha_Profissional htp
+    JOIN Enfermeiro e 
+    ON htp.ID_Profissional = e.ID_profisssional
+    GROUP BY htp.ID_Hospital
+) e 
+ON h.CNPJ = e.ID_Hospital
+LEFT JOIN (
+    SELECT
+        htp.ID_Hospital,
+        COUNT(*) AS num_medicos
+    FROM Hospital_Trabalha_Profissional htp
+    JOIN Medico m ON htp.ID_Profissional = m.ID_profisssional
+    GROUP BY htp.ID_Hospital
+) m 
+ON h.CNPJ = m.ID_Hospital
+GROUP BY h.Nome;
+
+
+
+
+    
+--QUESTÃO F
+SELECT
+    T.Descricao AS Tratamentos,
+    COALESCE(ROUND(AVG(PE.Num_Exames), 0), 0) AS Media_Exames
+FROM Tratamento T
+LEFT JOIN Paciente_Recebe_Tratamento PRT 
+ON T.ID_Tratamento = PRT.ID_Tratamento
+LEFT JOIN (
+    SELECT
+        PRT.ID_Tratamento,
+        COUNT(*) AS Num_Exames
+    FROM
+        Paciente_Realiza_Exame PRE
+    JOIN
+        Paciente_Recebe_Tratamento PRT ON PRE.CPF_Paciente = PRT.CPF_Paciente
+    JOIN
+        Tratamento T ON PRT.ID_Tratamento = T.ID_Tratamento
+    WHERE
+        T.Descricao LIKE '%Covid-19%'
+    GROUP BY
+        PRT.ID_Tratamento
+) PE 
+ON T.ID_Tratamento = PE.ID_Tratamento
+GROUP BY T.Descricao;
+
+
+
+
+--QUESTÃO G
+SELECT
+    p.Nome AS Nome_Paciente,
+    COUNT(pre.ID_Exame) AS Quantidade_Exames
+FROM Paciente p
+JOIN Paciente_Realiza_Exame pre 
+ON p.CPF = pre.CPF_Paciente
+GROUP BY p.Nome;
+    
+    
+    
+    
+--QUESTÃO H
+SELECT
+    H.Nome AS Nome_Hospital,
+    L.Numero AS Numero_Leito,
+    ROUND(AVG((P.Data_Alta - P.Data_Internacao)), 2) AS Tempo_Medio_Ocupacao_Dias
+FROM
+    Hospital H
+JOIN
+    Leito L ON H.CNPJ = L.CNPJ_Hospital
+JOIN
+    Paciente P ON L.ID_Leito = P.ID_Leito AND L.CNPJ_Hospital = P.CNPJ_Hospital
+GROUP BY
+    H.Nome, L.Numero
+ORDER BY
+    Nome_Hospital, Numero_Leito;
+
+
+
+
+
