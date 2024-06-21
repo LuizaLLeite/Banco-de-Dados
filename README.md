@@ -9,3 +9,4 @@ TEMA: Observatório da SARS-CoV-2
 - Dicionários de Dados
 - SCRIPTS SQL de criação
 - SCRIPTS SQL de inserção
+- SCRIPTS SQL de consultas
